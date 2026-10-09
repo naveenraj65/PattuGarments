@@ -9,9 +9,9 @@ Firebase is removed. Backend = Express + MongoDB (Mongoose). Frontend = React (V
 4. Production: `npm run build && npm start`
 
 ## Features
-- **Password login/register**: login with email OR phone and a password. Register verifies email OTP + phone OTP.
+- **Password login/register**: login with email OR phone and a password. Registration uses name, email, phone, and password.
   Passwords are stored as salted scrypt hashes. Existing accounts can set a password through the verified password-reset flow.
-  If SMTP/SMS are not configured (dev only) OTPs are printed in the server console and shown on screen.
+  Password-reset OTPs remain verified before an account password can be changed.
 - **Admin**: the `ADMIN_EMAIL` account. Admin page has 3 tabs:
   Orders & Payments (view screenshot, Verify / Reject, change order status), Payment QR (upload QR + UPI id), Products.
 - **Checkout**: Cash on Delivery or Online (customer sees admin's QR, pays, uploads screenshot).

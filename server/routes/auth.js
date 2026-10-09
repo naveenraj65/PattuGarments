@@ -59,25 +59,7 @@ router.post('/login/reset-password', verifyLimiter, ah(async (req, res) => {
   res.json({ user: publicUser(user) });
 }));
 
-// ---- REGISTER (email OTP + phone OTP, both verified) ----
-router.post('/register/send-otp', sendLimiter, ah(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const phone = normalizePhone(req.body.phone);
-  if (!email) throw httpError(400, 'Enter a valid email');
-  if (!phone) throw httpError(400, 'Enter a valid phone number');
-  if (await User.exists({ $or: [{ email }, { phone }] })) {
-    throw httpError(409, 'An account with this email or phone already exists. Please login.');
-  }
-  const emailCode = await issueOtp(`email:${email}`, 'register');
-  const phoneCode = await issueOtp(`phone:${phone}`, 'register');
-  const devEmail = await deliverOtp('email', email, emailCode);
-  const devPhone = await deliverOtp('phone', phone, phoneCode);
-  res.json({
-    message: 'OTPs sent to your email and phone',
-    ...((devEmail || devPhone) && { devOtp: { email: emailCode, phone: phoneCode } }),
-  });
-}));
-
+// ---- REGISTER ----
 router.post('/register', verifyLimiter, ah(async (req, res) => {
   const name = String(req.body.name || '').trim();
   const email = normalizeEmail(req.body.email);
@@ -88,9 +70,6 @@ router.post('/register', verifyLimiter, ah(async (req, res) => {
   if (password.length < 8 || password.length > 128) {
     throw httpError(400, 'Password must be between 8 and 128 characters');
   }
-
-  await checkOtp(`email:${email}`, 'register', req.body.emailOtp, { consume: false });
-  await checkOtp(`phone:${phone}`, 'register', req.body.phoneOtp, { consume: false });
 
   const user = await User.create({
     name,

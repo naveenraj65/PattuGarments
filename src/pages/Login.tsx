@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { KeyRound, Mail, Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { KeyRound, Mail, Loader2 } from 'lucide-react';
 import { api, apiError } from '../api';
 import { setUser } from '../store/authSlice';
 import OtpField, { useCountdown } from '../components/OtpField';
 
-type IdentifierMode = 'email' | 'phone';
 type Flow = 'login' | 'reset';
 
 const Login: React.FC = () => {
-  const [identifierMode, setIdentifierMode] = useState<IdentifierMode>('email');
   const [flow, setFlow] = useState<Flow>('login');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -89,27 +87,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const tab = (mode: IdentifierMode, label: string, Icon: typeof Mail) => (
-    <button
-      type="button"
-      onClick={() => {
-        setIdentifierMode(mode);
-        setIdentifier('');
-        setOtp('');
-        setOtpSent(false);
-        setPassword('');
-        setConfirmation('');
-        setError('');
-        setInfo('');
-      }}
-      className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${
-        identifierMode === mode ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'
-      }`}
-    >
-      <Icon className="w-4 h-4" /> {label}
-    </button>
-  );
-
   const submit = flow === 'login' ? login : otpSent ? resetPassword : sendResetOtp;
 
   return (
@@ -124,23 +101,16 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex bg-gray-100 p-1 rounded-xl">
-          {tab('email', 'Email', Mail)}
-          {tab('phone', 'Phone', Phone)}
-        </div>
-
         <form className="space-y-4" onSubmit={submit}>
           <div className="relative">
-            {identifierMode === 'email'
-              ? <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              : <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />}
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
-              type={identifierMode === 'email' ? 'email' : 'tel'}
+              type="text"
               required
               disabled={flow === 'reset' && otpSent}
-              autoComplete={identifierMode === 'email' ? 'email' : 'tel'}
+              autoComplete="username"
               className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all disabled:bg-gray-50"
-              placeholder={identifierMode === 'email' ? 'Email address' : 'Mobile number (e.g. 9876543210)'}
+              placeholder="Email address or mobile number"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
             />
@@ -203,14 +173,9 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading || (flow === 'reset' && otpSent && otp.length !== 6)}
-            className="group w-full flex justify-center py-3 px-4 text-sm font-bold rounded-xl text-white bg-black hover:bg-gray-800 transition-all disabled:opacity-50"
+            className="w-full flex justify-center py-3 px-4 text-sm font-bold rounded-xl text-white bg-black hover:bg-gray-800 transition-all disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-              <>
-                {flow === 'login' ? 'Login' : otpSent ? 'Reset password' : 'Send reset code'}
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : flow === 'login' ? 'Login' : otpSent ? 'Reset password' : 'Send reset code'}
           </button>
 
           {flow === 'login' ? (
@@ -225,7 +190,7 @@ const Login: React.FC = () => {
                   onClick={() => { setOtpSent(false); setOtp(''); setInfo(''); setPassword(''); setConfirmation(''); }}
                   className="text-gray-500 hover:text-black"
                 >
-                  Change {identifierMode}
+                  Change email or phone
                 </button>
                 <button type="button" disabled={timer.left > 0 || loading} onClick={() => sendResetOtp()} className="font-bold text-black disabled:text-gray-400">
                   {timer.left > 0 ? `Resend in ${timer.left}s` : 'Resend code'}
