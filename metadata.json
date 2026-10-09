@@ -1,0 +1,5 @@
+{
+  "name": "Pattu Garments",
+  "description": "A production-ready e-commerce platform for clothing with role-based access control, real-time inventory, and secure checkout.",
+  "requestFramePermissions": []
+}
