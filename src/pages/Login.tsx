@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { KeyRound, Mail, Phone, ArrowRight, Loader2 } from 'lucide-react';
 import { api, apiError } from '../api';
 import { setUser } from '../store/authSlice';
 import OtpField, { useCountdown } from '../components/OtpField';
 
-type Mode = 'email' | 'phone';
+type IdentifierMode = 'email' | 'phone';
+type Flow = 'login' | 'reset';
 
 const Login: React.FC = () => {
-  const [mode, setMode] = useState<Mode>('email');
+  const [identifierMode, setIdentifierMode] = useState<IdentifierMode>('email');
+  const [flow, setFlow] = useState<Flow>('login');
   const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,29 +24,22 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const switchMode = (m: Mode) => {
-    setMode(m); setIdentifier(''); setOtp(''); setOtpSent(false); setError(''); setInfo('');
+  const changeFlow = (nextFlow: Flow) => {
+    setFlow(nextFlow);
+    setOtp('');
+    setOtpSent(false);
+    setPassword('');
+    setConfirmation('');
+    setError('');
+    setInfo('');
   };
 
-  const sendOtp = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setLoading(true); setError('');
-    try {
-      const { data } = await api.post('/auth/login/send-otp', { identifier });
-      setOtpSent(true); setOtp(''); timer.start();
-      setInfo(data.devOtp ? `${data.message} (dev mode OTP: ${data.devOtp})` : data.message);
-    } catch (err) {
-      setError(apiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verify = async (e: React.FormEvent) => {
+  const login = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
-      const { data } = await api.post('/auth/login', { identifier, otp });
+      const { data } = await api.post('/auth/login', { identifier, password });
       dispatch(setUser(data.user));
       navigate(data.user.role === 'ADMIN' ? '/admin' : '/');
     } catch (err) {
@@ -52,24 +49,79 @@ const Login: React.FC = () => {
     }
   };
 
-  const tab = (m: Mode, label: string, Icon: typeof Mail) => (
+  const sendResetOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const { data } = await api.post('/auth/login/send-reset-otp', { identifier });
+      setOtpSent(true);
+      setOtp('');
+      timer.start();
+      setInfo(data.devOtp ? `${data.message} (dev mode code: ${data.devOtp})` : data.message);
+    } catch (err) {
+      setError(apiError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmation) {
+      setError('Passwords do not match');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const { data } = await api.post('/auth/login/reset-password', {
+        identifier,
+        otp,
+        password,
+      });
+      dispatch(setUser(data.user));
+      navigate(data.user.role === 'ADMIN' ? '/admin' : '/');
+    } catch (err) {
+      setError(apiError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const tab = (mode: IdentifierMode, label: string, Icon: typeof Mail) => (
     <button
       type="button"
-      onClick={() => switchMode(m)}
+      onClick={() => {
+        setIdentifierMode(mode);
+        setIdentifier('');
+        setOtp('');
+        setOtpSent(false);
+        setPassword('');
+        setConfirmation('');
+        setError('');
+        setInfo('');
+      }}
       className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${
-        mode === m ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'
+        identifierMode === mode ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'
       }`}
     >
       <Icon className="w-4 h-4" /> {label}
     </button>
   );
 
+  const submit = flow === 'login' ? login : otpSent ? resetPassword : sendResetOtp;
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl border border-gray-100 shadow-sm">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tighter text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-sm text-gray-500">Login with a one-time password</p>
+          <h2 className="text-3xl font-bold tracking-tighter text-gray-900">
+            {flow === 'login' ? 'Welcome Back' : 'Reset Password'}
+          </h2>
+          <p className="mt-2 text-sm text-gray-500">
+            {flow === 'login' ? 'Login with your email or phone and password' : 'Verify your email or phone to set a new password'}
+          </p>
         </div>
 
         <div className="flex bg-gray-100 p-1 rounded-xl">
@@ -77,49 +129,116 @@ const Login: React.FC = () => {
           {tab('phone', 'Phone', Phone)}
         </div>
 
-        <form className="space-y-4" onSubmit={otpSent ? verify : sendOtp}>
+        <form className="space-y-4" onSubmit={submit}>
           <div className="relative">
-            {mode === 'email'
+            {identifierMode === 'email'
               ? <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               : <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />}
             <input
-              type={mode === 'email' ? 'email' : 'tel'}
+              type={identifierMode === 'email' ? 'email' : 'tel'}
               required
-              disabled={otpSent}
+              disabled={flow === 'reset' && otpSent}
+              autoComplete={identifierMode === 'email' ? 'email' : 'tel'}
               className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all disabled:bg-gray-50"
-              placeholder={mode === 'email' ? 'Email address' : 'Mobile number (e.g. 9876543210)'}
+              placeholder={identifierMode === 'email' ? 'Email address' : 'Mobile number (e.g. 9876543210)'}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
             />
           </div>
 
-          {otpSent && <OtpField value={otp} onChange={setOtp} />}
+          {flow === 'login' && (
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="password"
+                required
+                minLength={8}
+                maxLength={128}
+                autoComplete="current-password"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          )}
+
+          {flow === 'reset' && otpSent && (
+            <>
+              <OtpField value={otp} onChange={setOtp} />
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  autoComplete="new-password"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                  placeholder="New password (at least 8 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  autoComplete="new-password"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                  placeholder="Confirm new password"
+                  value={confirmation}
+                  onChange={(e) => setConfirmation(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
           {info && <p className="text-sm text-emerald-600">{info}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading || (otpSent && otp.length !== 6)}
+            disabled={loading || (flow === 'reset' && otpSent && otp.length !== 6)}
             className="group w-full flex justify-center py-3 px-4 text-sm font-bold rounded-xl text-white bg-black hover:bg-gray-800 transition-all disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <>
-                {otpSent ? 'Verify & Login' : 'Send OTP'}
+                {flow === 'login' ? 'Login' : otpSent ? 'Reset password' : 'Send reset code'}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
 
-          {otpSent && (
-            <div className="flex justify-between text-sm">
-              <button type="button" onClick={() => { setOtpSent(false); setOtp(''); setInfo(''); }} className="text-gray-500 hover:text-black">
-                Change {mode}
+          {flow === 'login' ? (
+            <button type="button" onClick={() => changeFlow('reset')} className="w-full text-sm text-gray-500 hover:text-black">
+              Forgot password?
+            </button>
+          ) : otpSent ? (
+            <>
+              <div className="flex justify-between text-sm">
+                <button
+                  type="button"
+                  onClick={() => { setOtpSent(false); setOtp(''); setInfo(''); setPassword(''); setConfirmation(''); }}
+                  className="text-gray-500 hover:text-black"
+                >
+                  Change {identifierMode}
+                </button>
+                <button type="button" disabled={timer.left > 0 || loading} onClick={() => sendResetOtp()} className="font-bold text-black disabled:text-gray-400">
+                  {timer.left > 0 ? `Resend in ${timer.left}s` : 'Resend code'}
+                </button>
+              </div>
+              <button type="button" onClick={() => changeFlow('login')} className="w-full text-sm text-gray-500 hover:text-black">
+                Back to login
               </button>
-              <button type="button" disabled={timer.left > 0 || loading} onClick={() => sendOtp()} className="font-bold text-black disabled:text-gray-400">
-                {timer.left > 0 ? `Resend in ${timer.left}s` : 'Resend OTP'}
-              </button>
-            </div>
+            </>
+          ) : (
+            <button type="button" onClick={() => changeFlow('login')} className="w-full text-sm text-gray-500 hover:text-black">
+              Back to login
+            </button>
           )}
         </form>
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { User, Mail, Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, KeyRound, ArrowRight, Loader2 } from 'lucide-react';
 import { api, apiError } from '../api';
 import { setUser } from '../store/authSlice';
 import OtpField, { useCountdown } from '../components/OtpField';
@@ -10,7 +10,7 @@ const input = 'block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl fo
 const icon = 'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400';
 
 const Register: React.FC = () => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
   const [emailOtp, setEmailOtp] = useState('');
   const [phoneOtp, setPhoneOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -74,6 +74,12 @@ const Register: React.FC = () => {
             <Phone className={icon} />
             <input type="tel" required disabled={otpSent} className={input} placeholder="Mobile number"
               value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div className="relative">
+            <KeyRound className={icon} />
+            <input type="password" required minLength={8} maxLength={128} autoComplete="new-password"
+              disabled={otpSent} className={input} placeholder="Password (at least 8 characters)"
+              value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
 
           {otpSent && (
