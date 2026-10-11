@@ -1,4 +1,4 @@
-const base = 'http://localhost:3000';
+const base = 'https://pattugarments.onrender.com/';
 
 async function req(path, init = {}) {
   const r = await fetch(base + path, init);
