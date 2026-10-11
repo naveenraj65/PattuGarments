@@ -25,7 +25,6 @@ const AdminDashboard: React.FC = () => {
     description: '',
     price: 0,
     category: 'Men',
-    imageUrl: '',
     stock: 0
   });
 
@@ -61,9 +60,6 @@ const AdminDashboard: React.FC = () => {
       payload.append('category', formData.category);
       payload.append('stock', String(formData.stock));
       selectedImages.forEach((image) => payload.append('images', image));
-      if (!selectedImages.length && formData.imageUrl && (!editingProduct || formData.imageUrl !== editingProduct.imageUrl)) {
-        payload.append('imageUrl', formData.imageUrl);
-      }
 
       if (editingProduct) {
         await api.put(`/products/${editingProduct.id}`, payload);
@@ -73,7 +69,7 @@ const AdminDashboard: React.FC = () => {
       setIsModalOpen(false);
       setEditingProduct(null);
       setSelectedImages([]);
-      setFormData({ name: '', description: '', price: 0, category: 'Men', imageUrl: '', stock: 0 });
+      setFormData({ name: '', description: '', price: 0, category: 'Men', stock: 0 });
       fetchProducts();
       loadStats();
     } catch (error) {
@@ -101,7 +97,6 @@ const AdminDashboard: React.FC = () => {
       description: product.description,
       price: product.price,
       category: product.category,
-      imageUrl: product.imageUrl,
       stock: product.stock
     });
     setIsModalOpen(true);
@@ -141,7 +136,7 @@ const AdminDashboard: React.FC = () => {
             onClick={() => {
               setEditingProduct(null);
               setSelectedImages([]);
-              setFormData({ name: '', description: '', price: 0, category: 'Men', imageUrl: '', stock: 0 });
+              setFormData({ name: '', description: '', price: 0, category: 'Men', stock: 0 });
               setIsModalOpen(true);
             }}
             className="flex items-center px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all"
@@ -324,7 +319,7 @@ const AdminDashboard: React.FC = () => {
                     accept="image/jpeg,image/png,image/webp"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-black file:text-white file:font-bold"
                     onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
+                      const files = Array.from(e.target.files || []) as File[];
                       if (files.length > 10) {
                         alert('You can upload up to 10 images per product.');
                         e.target.value = '';
@@ -339,7 +334,6 @@ const AdminDashboard: React.FC = () => {
                         return;
                       }
                       setSelectedImages(files);
-                      if (files.length) setFormData({ ...formData, imageUrl: '' });
                     }}
                   />
                   <p className="text-xs text-gray-500">Upload up to 10 images (5 MB each). The first image is the main storefront photo.</p>
@@ -353,16 +347,6 @@ const AdminDashboard: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  <input
-                    type="url"
-                    placeholder="Or use image URL"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none"
-                    value={formData.imageUrl}
-                    onChange={(e) => {
-                      setFormData({ ...formData, imageUrl: e.target.value });
-                      if (e.target.value.trim()) setSelectedImages([]);
-                    }}
-                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">Description</label>

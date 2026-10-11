@@ -9,23 +9,16 @@ const router = Router();
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const pick = (b) => ({
   name: b.name, description: b.description, price: Number(b.price),
-  category: b.category, imageUrl: b.imageUrl,
-  ...(Array.isArray(b.images) ? { images: b.images } : {}),
+  category: b.category,
   stock: Number(b.stock),
 });
 const uploadProductImages = uploadProduct.fields([
   { name: 'images', maxCount: 10 },
   { name: 'image', maxCount: 1 },
 ]);
-const addUploadedImages = (body, req) => {
-  const files = [...(req.files?.images || []), ...(req.files?.image || [])];
-  if (files.length) {
-    body.images = files.map((file) => `/uploads/products/${file.filename}`);
-    body.imageUrl = body.images[0];
-  } else if (body.imageUrl) {
-    body.images = [body.imageUrl];
-  }
-};
+const getUploadedImages = (req) =>
+  [...(req.files?.images || []), ...(req.files?.image || [])]
+    .map((file) => `/uploads/products/${file.filename}`);
 
 router.get('/', ah(async (req, res) => {
   const filter = {};
@@ -46,17 +39,17 @@ router.get('/:id', ah(async (req, res) => {
 }));
 
 router.post('/', requireAdmin, uploadProductImages, ah(async (req, res) => {
-  const body = { ...req.body };
-  addUploadedImages(body, req);
-  if (!body.imageUrl) throw httpError(400, 'Please upload a product image or provide an image URL');
-  res.status(201).json(await Product.create(pick(body)));
+  const images = getUploadedImages(req);
+  if (!images.length) throw httpError(400, 'Please upload at least one product image');
+  res.status(201).json(await Product.create({ ...pick(req.body), imageUrl: images[0], images }));
 }));
 
 router.put('/:id', requireAdmin, uploadProductImages, ah(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw httpError(404, 'Product not found');
-  const body = { ...req.body };
-  addUploadedImages(body, req);
-  const product = await Product.findByIdAndUpdate(req.params.id, pick(body), { new: true, runValidators: true });
+  const update = pick(req.body);
+  const images = getUploadedImages(req);
+  if (images.length) Object.assign(update, { imageUrl: images[0], images });
+  const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
   if (!product) throw httpError(404, 'Product not found');
   res.json(product);
 }));
