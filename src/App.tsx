@@ -21,6 +21,7 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import SearchResults from './pages/SearchResults';
 import Contact from './pages/Contact';
+import About from './pages/About';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -47,6 +48,7 @@ const App: React.FC = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/search" element={<SearchResults />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
             
             {/* Protected Routes */}
             <Route path="/checkout" element={
@@ -74,8 +76,7 @@ const App: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">
               <div className="text-2xl font-bold tracking-tighter">Pattu Garments</div>
               <div className="flex space-x-8 text-sm text-gray-500">
-                <a href="#" className="hover:text-black">Privacy Policy</a>
-                <a href="#" className="hover:text-black">Terms of Service</a>
+                <Link to="/about" className="hover:text-black">About Us</Link>
                 <Link to="/contact" className="hover:text-black">Contact Us</Link>
               </div>
               <div className="text-sm text-gray-400">

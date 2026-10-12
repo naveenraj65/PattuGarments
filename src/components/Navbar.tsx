@@ -80,6 +80,7 @@ const Navbar: React.FC = () => {
           <div className="hidden sm:flex sm:items-center sm:space-x-8">
             <Link to="/" className="text-sm font-medium text-black-700 hover:text-black">Home</Link>
             <Link to="/products" className="text-sm font-medium text-black-700 hover:text-black">Shop</Link>
+            <Link to="/about" className="text-sm font-medium text-black-700 hover:text-black">About</Link>
 
             {user?.role === 'ADMIN' && (
               <Link to="/admin" className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
@@ -129,6 +130,7 @@ const Navbar: React.FC = () => {
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link to="/" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-black">Home</Link>
             <Link to="/products" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-black">Shop</Link>
+            <Link to="/about" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-black">About</Link>
             <Link to="/cart" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-black">Cart ({cartCount})</Link>
             {user?.role === 'ADMIN' && (
               <Link to="/admin" className="block px-3 py-2 text-base font-medium text-indigo-600">Admin Dashboard</Link>
