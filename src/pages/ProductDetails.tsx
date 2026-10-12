@@ -29,15 +29,22 @@ const ProductDetails: React.FC = () => {
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
-  
+
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // ✅ FIX: Product page open aagum pothu (or product id maarum pothu) always top-ku scroll pannum
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [id]);
+
   useEffect(() => {
     setSelectedImageIndex(0);
+    setQuantity(1);
     const fetchProductAndReviews = async () => {
       if (!id) return;
+      setLoading(true);
       try {
         const [productRes, reviewsRes] = await Promise.all([
           api.get<Product>(`/products/${id}`),
@@ -92,7 +99,7 @@ const ProductDetails: React.FC = () => {
     }
   };
 
-  const averageRating = reviews.length > 0 
+  const averageRating = reviews.length > 0
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : 0;
   const productImages = product?.images?.length ? product.images : product ? [product.imageUrl] : [];
