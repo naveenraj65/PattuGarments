@@ -1,4 +1,4 @@
-const base = 'https://pattugarments.onrender.com/';
+const base = 'https://pattugarments.in/';
 
 async function req(path, init = {}) {
   const r = await fetch(base + path, init);
