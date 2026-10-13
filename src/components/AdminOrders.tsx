@@ -80,14 +80,14 @@ const AdminOrders: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
               <p className="text-sm mt-2">{o.customer?.name} · {o.customer?.phone} · {o.customer?.email}</p>
             </div>
             <div className="text-right space-y-1">
-              <p className="text-xl font-bold">${o.totalAmount.toFixed(2)}</p>
+              <p className="text-xl font-bold">₹{o.totalAmount.toFixed(2)}</p>
               <PaymentBadge status={o.paymentStatus} />
               <p className="text-xs text-gray-500">{o.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online (UPI)'}</p>
             </div>
           </div>
 
           <div className="text-sm text-gray-600">
-            {o.items.map((i, idx) => <div key={idx}>{i.name} x {i.quantity} — ${(i.price * i.quantity).toFixed(2)}</div>)}
+            {o.items.map((i, idx) => <div key={idx}>{i.name} x {i.quantity} — ₹{(i.price * i.quantity).toFixed(2)}</div>)}
           </div>
           <p className="text-sm text-gray-500">
             Ship to: {o.shippingAddress.fullName}, {o.shippingAddress.address}, {o.shippingAddress.city}, {o.shippingAddress.state} - {o.shippingAddress.pincode} ({o.shippingAddress.phone})
@@ -130,7 +130,7 @@ const AdminOrders: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
         <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" onClick={() => setProof(null)}>
           <div className="bg-white rounded-3xl p-4 max-w-lg w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-3">
-              <p className="font-bold">Pay ${proof.totalAmount.toFixed(2)} — Order #{proof.id.slice(-8).toUpperCase()}</p>
+              <p className="font-bold">Pay ₹{proof.totalAmount.toFixed(2)} — Order #{proof.id.slice(-8).toUpperCase()}</p>
               <button onClick={() => setProof(null)}><X className="w-5 h-5" /></button>
             </div>
             <img src={`/api/orders/${proof.id}/proof`} alt="Payment screenshot" className="w-full rounded-2xl" />

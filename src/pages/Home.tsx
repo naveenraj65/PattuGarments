@@ -81,7 +81,7 @@ const Home: React.FC = () => {
       <section className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Featured Products</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Our Products</h2>
             <p className="mt-2 text-gray-500">Handpicked styles just for you.</p>
           </div>
           <Link to="/products" className="text-sm font-semibold text-black hover:underline flex items-center">
